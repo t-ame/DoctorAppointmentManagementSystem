@@ -14,5 +14,9 @@ public interface PatientRepository extends JpaRepository<Patient, Integer> {
 	@RestResource(path="firstName")
 	List<Patient> findByFirstName(@Param("name")String firstName);
 
+	@RestResource(path="login")
+	Patient findByEmailAndPassword(String email, String password);
+	
+	
 	 
 }

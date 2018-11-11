@@ -1,12 +1,12 @@
-package com.java.AdminService;
+package com.java;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class AdminServiceApplication {
+public class LeaveServiceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(AdminServiceApplication.class, args);
+		SpringApplication.run(LeaveServiceApplication.class, args);
 	}
 }

@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: patient-service
+
+eureka:
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://localhost:8086/eureka/
+      
