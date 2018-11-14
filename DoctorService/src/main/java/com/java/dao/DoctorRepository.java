@@ -4,17 +4,19 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.repository.query.Param;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.data.rest.core.annotation.RestResource;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.java.dto.Doctor;
-@RepositoryRestResource(path="doctors")
+
+@Repository
+@Transactional
 public interface DoctorRepository extends JpaRepository<Doctor, Integer> {
-	
-	@RestResource(path="firstName")
-	List<Doctor> findByFirstName(@Param("name")String firstName);
-	
-	@RestResource(path="speciality")
-	 Set<Doctor> findBySpecialities_Name(String  name);
+
+	@RestResource(path = "firstName")
+	List<Doctor> findByFirstName(String firstName);
+
+	@RestResource(path = "find-speciality-zipcode")
+	Set<Doctor> findBySpecialties_NameAndAddresses_Zipcode(String name, int zipcode);
 }

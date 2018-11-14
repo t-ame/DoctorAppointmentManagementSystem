@@ -1,6 +1,6 @@
 spring:
   application:
-    name: patient-service
+    name: appointment-service
 
 eureka:
   client:

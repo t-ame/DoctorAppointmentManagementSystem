@@ -2,24 +2,22 @@ package com.java.dto;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Convert;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.ManyToMany;
 import javax.validation.constraints.Future;
 import javax.validation.constraints.NotEmpty;
 
-import org.hibernate.annotations.SQLDelete;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.java.util.StatusConverter;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 /*I'm using spring-boot-starter-parent and spring-boot-starter-data-jpa (version 1.1.9). I found some strange behaviour on entities. When I specify @column(name = "myName") then jpa is generating sql query containing "my_name" column (so it changes the name I provide).
 
 Other examples:
@@ -37,16 +35,17 @@ There are 2 methods in NamingStrategy interface propertyToColumnName and columnN
 in ImprovedNamingStrategy both change the name from camel to _ format while in DefaultNamingStrategy it is returning name as it is in 2nd method which is from my point of view the correct behavior.*/
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder(builderMethodName="appointment")
+@Builder(builderMethodName = "appointment")
 @Data
-@Entity
-@SQLDelete(sql="update Appointment set status = 'Cancelled' where appointmentId = ?")
-public class Appointment implements Serializable{
-	private static final long serialVersionUID = 1342910184120806871L;
-	@Id
-	@GeneratedValue
-	@JsonIgnore
-	@Column(name="appointmentId")
+//@Entity
+//@SQLDelete(sql = "update Appointment set status = 'Cancelled' where appointmentId = ?")
+public class Appointment implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2286838562279317949L;
+	@Column(name = "appointmentId")
 	private int appointmentId;
 	@Future
 	private LocalDateTime dateOfAppointment;
@@ -55,16 +54,21 @@ public class Appointment implements Serializable{
 	@NotEmpty
 	private String clinicAddress;
 	@NotEmpty
-	private String doctorEmailId; 
+	private String doctorEmailId;
 	@NotEmpty
 	private String doctorName;
 	@NotEmpty
 	@Builder.Default
-	private String speciality="General Physician";
+	private String speciality = "General Physician";
 	@Builder.Default
-//	@Enumerated(EnumType.STRING)
-	@Convert(converter=StatusConverter.class)
-	private AppointmentStatus status=AppointmentStatus.BOOKED; 
+	@Convert(converter = StatusConverter.class)
+	private AppointmentStatus status = AppointmentStatus.BOOKED;
+
+
+	@ManyToMany
+	@Builder.Default
+	private Set<Specialty> specialties = new HashSet<>();
+
 }
 
 //medical history
