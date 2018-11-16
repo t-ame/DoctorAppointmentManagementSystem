@@ -4,9 +4,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class AdminServiceApplication {
+public class LeaveStarter {
 
 	public static void main(String[] args) {
-		SpringApplication.run(AdminServiceApplication.class, args);
+		SpringApplication.run(LeaveStarter.class, args);
 	}
 }

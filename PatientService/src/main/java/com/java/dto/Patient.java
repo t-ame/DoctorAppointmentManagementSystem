@@ -1,8 +1,10 @@
 package com.java.dto;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -19,7 +21,6 @@ import org.hibernate.annotations.SQLDelete;
 import org.springframework.hateoas.ResourceSupport;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 
@@ -36,9 +37,14 @@ import lombok.NoArgsConstructor;
 @Builder(builderMethodName = "patient")
 @Entity
 @DynamicUpdate
-@SQLDelete(sql = "update Patient set active=false where patientId= ?")
+@SQLDelete(sql = "update Patient set enabled=false where patientId= ?")
 @JsonFilter("filterName")
-public class Patient extends ResourceSupport {
+public class Patient extends ResourceSupport implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3954113168734569845L;
+
 	@Id
 	@GeneratedValue
 	int patientId;
@@ -55,19 +61,15 @@ public class Patient extends ResourceSupport {
 	@Builder.Default
 	private long mobileNumber = -1;
 	@Past
-	@JsonFormat(pattern = "yyyy-MM-dd")
 	private LocalDateTime dob;
 	@Enumerated(EnumType.STRING)
 	private Gender gender;
 	@Builder.Default
-	boolean active = true;
-	@ManyToMany
+	private boolean enabled = true;
+	@ManyToMany(cascade = CascadeType.PERSIST)
 	List<Address> addresses;
 
-//	// NOT SURE IF I NEED THIS...
-//	@ElementCollection
-//	@Builder.Default
-//	private List<File> medicalRecords = new ArrayList<>();
+//	================================= FILTER DEFINITIONS ===================================================
 
 	public static SimpleFilterProvider filterOutPassword() {
 		SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("email", "firstName", "lastName",

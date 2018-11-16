@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.java.dao.AppointmentRepository;
 import com.java.dto.Appointment;
+import com.java.dto.AppointmentStatus;
 
 @Service
 @Transactional
@@ -31,7 +32,7 @@ public class AppointmentService {
 	}
 
 	List<Appointment> findByDoctorEmailIdAndDateOfAppointmentAndStatus(String doctorEmailId,
-			LocalDate dateOfAppointment, String status) {
+			LocalDate dateOfAppointment, AppointmentStatus status) {
 		return rep.findByDoctorEmailIdAndDateOfAppointmentAndStatus(doctorEmailId, dateOfAppointment, status);
 	}
 
@@ -39,7 +40,7 @@ public class AppointmentService {
 		return rep.findByPatientEmailId(patientEmailId);
 	}
 
-	List<Appointment> findByPatientEmailIdAndStatus(String patientEmailId, String status) {
+	List<Appointment> findByPatientEmailIdAndStatus(String patientEmailId, AppointmentStatus status) {
 		return rep.findByPatientEmailIdAndStatus(patientEmailId, status);
 	}
 

@@ -7,6 +7,7 @@ import javax.persistence.Id;
 import javax.validation.constraints.Email;
 
 import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.SQLDelete;
 
 import com.java.util.UserRoleConverter;
 
@@ -15,6 +16,7 @@ import lombok.Data;
 @Data
 @Entity
 @DynamicUpdate
+@SQLDelete(sql = "update Login set enabled=false where userName = ?")
 public class Login {
 	@Id
 	@Email
@@ -28,5 +30,6 @@ public class Login {
 	private UserRole userRole;
 	@Column(nullable = false)
 	private int userId;
+	private boolean enabled = true;
 
 }

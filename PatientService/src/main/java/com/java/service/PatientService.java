@@ -1,5 +1,8 @@
 package com.java.service;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,17 +22,36 @@ public class PatientService {
 	}
 
 	public Patient patchUpdatePatient(Patient patient) {
-		Patient p = null;
-		if (patient.getMobileNumber() != -1) {
-			p = rep.updateMobileNumber(patient.getMobileNumber(), patient.getPatientId());
+		Optional<Patient> p = rep.findById(patient.getPatientId());
+		Patient newPatient = p.get();
+
+		if (newPatient != null) {
+
+			if (patient.getMobileNumber() != -1) {
+				newPatient.setMobileNumber(patient.getMobileNumber());
+			}
+			if (patient.getFirstName() != null) {
+				newPatient.setFirstName(patient.getFirstName());
+			}
+			if (patient.getLastName() != null) {
+				newPatient.setLastName(patient.getLastName());
+			}
+			if (patient.getEmail() != null) {
+				newPatient.setEmail(patient.getEmail());
+			}
+			if (patient.getDob() != null) {
+				newPatient.setDob(patient.getDob());
+			}
+			if (patient.getGender() != null) {
+				newPatient.setGender(patient.getGender());
+			}
+			if (patient.getAddresses() != null && patient.getAddresses().size() > 0) {
+				newPatient.getAddresses().addAll(patient.getAddresses());
+			}
+
+			newPatient = rep.save(newPatient);
 		}
-		if (patient.getFirstName() != null) {
-			p = rep.updateFirstName(patient.getFirstName(), patient.getPatientId());
-		}
-		if (patient.getLastName() != null) {
-			p = rep.updateLastName(patient.getLastName(), patient.getPatientId());
-		}
-		return p;
+		return newPatient;
 	}
 
 	public Patient addPatient(Patient patient) {
@@ -38,6 +60,14 @@ public class PatientService {
 
 	public void deletePatient(Patient patient) {
 		rep.delete(patient);
+	}
+
+	public List<Patient> findAll() {
+		return rep.findByActiveIs(true);
+	}
+
+	public List<Patient> findAllDeleted() {
+		return rep.findByActiveIs(false);
 	}
 
 }
