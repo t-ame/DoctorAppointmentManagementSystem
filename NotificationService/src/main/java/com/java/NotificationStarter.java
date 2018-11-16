@@ -18,6 +18,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+import brave.sampler.Sampler;
+
 @SpringBootApplication
 @EnableJms
 @EnableJpaRepositories(basePackages = "com.java.dao")
@@ -60,6 +62,11 @@ public class NotificationStarter {
 		props.put("mail.debug", "true");
 
 		return mailSender;
+	}
+	
+	@Bean
+	Sampler getSampler() {
+		return Sampler.ALWAYS_SAMPLE;
 	}
 
 }

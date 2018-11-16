@@ -9,6 +9,7 @@ import org.springframework.data.rest.core.annotation.RestResource;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.java.dto.Address;
 import com.java.dto.Patient;
 
 @Repository
@@ -23,19 +24,23 @@ public interface PatientRepository extends JpaRepository<Patient, Integer> {
 //	@Override
 //	Patient save(Patient patient);
 
-	@Modifying
-	@Query("update Patient set mobileNumber = ?1 where patientId = ?2")
-	Patient updateMobileNumber(long mobile, int patientId);
-
-	@Modifying
-	@Query("update Patient set firstName = ?1 where patientId = ?2")
-	Patient updateFirstName(String firstName, int patientId);
-
-	@Modifying
-	@Query("update Patient set lastName = ?1 where patientId = ?2")
-	Patient updateLastName(String lastName, int patientId);
+//	@Modifying
+//	@Query("update Patient set mobileNumber = ?1 where patientId = ?2")
+//	Patient updateMobileNumber(long mobile, int patientId);
+//
+//	@Modifying
+//	@Query("update Patient set firstName = ?1 where patientId = ?2")
+//	Patient updateFirstName(String firstName, int patientId);
+//
+//	@Modifying
+//	@Query("update Patient set lastName = ?1 where patientId = ?2")
+//	Patient updateLastName(String lastName, int patientId);
 
 	@RestResource(path = "/findactive", exported = true)
-	List<Patient> findByActiveIs(boolean active);
+	List<Patient> findByEnabledIs(boolean active);
+
+	@Modifying
+	@Query("select addresses from Patient where patientId = ?1")
+	List<Address> findPatientAddresses(int patientId);
 
 }

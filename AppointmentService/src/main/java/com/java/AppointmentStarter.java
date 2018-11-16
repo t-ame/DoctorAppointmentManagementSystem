@@ -13,6 +13,8 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.support.converter.MappingJackson2MessageConverter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+import brave.sampler.Sampler;
+
 @SpringBootApplication
 @EnableJms
 @EnableJpaRepositories(basePackages = "com.java.dao")
@@ -32,6 +34,11 @@ public class AppointmentStarter {
 		JmsTemplate template = new JmsTemplate(factory);
 		template.setMessageConverter(new MappingJackson2MessageConverter());
 		return template;
+	}
+	
+	@Bean
+	Sampler getSampler() {
+		return Sampler.ALWAYS_SAMPLE;
 	}
 
 }

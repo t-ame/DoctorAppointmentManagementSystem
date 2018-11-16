@@ -22,7 +22,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
 	List<Appointment> findByDoctorEmailIdAndStatus(String doctorEmail, AppointmentStatus status);
 
 	@RestResource(path = "/find-patientemail", exported = true)
-	List<Appointment> findByPatientEmailId(String patientEmailId);
+	List<Appointment> findByPatientEmailId(String patientEmail);
 
 	@RestResource(path = "/find-patientemail-status", exported = true)
 	List<Appointment> findByPatientEmailIdAndStatus(String patientEmailId, AppointmentStatus status);

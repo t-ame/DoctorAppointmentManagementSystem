@@ -62,12 +62,12 @@ public class PatientService {
 		rep.delete(patient);
 	}
 
-	public List<Patient> findAll() {
-		return rep.findByActiveIs(true);
+	public List<Patient> findAllActive() {
+		return rep.findByEnabledIs(true);
 	}
 
 	public List<Patient> findAllDeleted() {
-		return rep.findByActiveIs(false);
+		return rep.findByEnabledIs(false);
 	}
 
 }
