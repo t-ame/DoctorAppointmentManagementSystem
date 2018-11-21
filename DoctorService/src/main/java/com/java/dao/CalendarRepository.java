@@ -8,6 +8,6 @@ import com.java.dto.Calendar;
 
 @Repository
 @Transactional
-public interface CalendarRepository extends JpaRepository<Calendar, String> {
+public interface CalendarRepository extends JpaRepository<Calendar, Integer> {
 
 }

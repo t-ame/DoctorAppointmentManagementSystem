@@ -5,7 +5,7 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
 import com.java.dto.Specialty;
 
-@RepositoryRestResource(exported = true)
-public interface SpecialtyRepository extends JpaRepository<Specialty, Integer> {
+@RepositoryRestResource(path = "specialties", exported = true)
+public interface SpecialtyRepository extends JpaRepository<Specialty, String> {
 
 }

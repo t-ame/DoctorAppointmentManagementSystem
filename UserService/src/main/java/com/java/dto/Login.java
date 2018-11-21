@@ -24,7 +24,6 @@ public class Login {
 	private String userName;
 	@Column(length = 100, nullable = false)
 	private String userPassword;
-//	@Enumerated(EnumType.STRING)
 	@Convert(converter = UserRoleConverter.class)
 	@Column(length = 20, nullable = false)
 	private UserRole userRole;

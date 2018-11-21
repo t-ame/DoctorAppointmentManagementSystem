@@ -1,9 +1,18 @@
 package com.java.controller;
 
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.BasePathAwareController;
 import org.springframework.hateoas.Link;
-import org.springframework.hateoas.mvc.ControllerLinkBuilder;
+import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJacksonValue;
@@ -15,10 +24,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import com.java.dao.PatientRepository;
+import com.google.gson.Gson;
+import com.java.dto.Address;
+import com.java.dto.Gender;
 import com.java.dto.Login;
 import com.java.dto.Patient;
 import com.java.dto.UserRole;
@@ -36,23 +46,66 @@ public class PatientController {
 	@Autowired
 	RestTemplate template;
 
-	@GetMapping(path = "patients")
-	public ResponseEntity<?> findAllActivePatients() {
+//	================================= HANDLER METHODS ===================================================
 
-		return null;
+	@GetMapping(path = "patients")
+	public Resources<MappingJacksonValue> findAllActivePatients() {
+		List<Patient> patients = ptService.findAllActive();
+
+		if (patients == null) {
+			patients = new ArrayList<>();
+		}
+		List<MappingJacksonValue> list = patients.stream().map(x -> {
+			x.add(linkTo(methodOn(PatientController.class).updatePatientOne(x.getPatientId(), x)).withSelfRel());
+			MappingJacksonValue patientData = new MappingJacksonValue(x);
+			patientData.setFilters(Patient.filterOutPassword());
+			return patientData;
+		}).collect(Collectors.toList());
+
+		Link link = linkTo(methodOn(PatientController.class).findAllActivePatients()).withRel("addresses");
+		Resources<MappingJacksonValue> result = new Resources<MappingJacksonValue>(list, link);
+		return result;
+	}
+
+	@GetMapping(path = "patients/{id}")
+	public ResponseEntity<?> findPatient(@PathVariable("id") int id) {
+		Patient patient = ptService.findById(id);
+		if (patient == null) {
+			return ResponseEntity.notFound().build();
+		}
+		Link selfLink = linkTo(methodOn(PatientController.class).updatePatientOne(patient.getPatientId(), patient))
+				.withSelfRel();
+		patient.add(selfLink);
+		Link link = linkTo(methodOn(PatientController.class).findPatientAddresses(id)).withRel("addresses");
+		patient.add(link);
+
+		return ResponseEntity.ok(patient);
+	}
+
+	@GetMapping(path = "patients/{id}/addresses")
+	public Resources<Address> findPatientAddresses(@PathVariable("id") int id) {
+		List<Address> addresses = ptService.findAddresses(id);
+		for (Address address : addresses) {
+			Link selfLink = linkTo(methodOn(AddressController.class).findAddress(address.getAddressId()))
+					.withRel("address");
+			address.add(selfLink);
+		}
+		Link link = linkTo(methodOn(PatientController.class).findPatientAddresses(id)).withRel("addresses");
+		Resources<Address> result = new Resources<Address>(addresses, link);
+
+		return result;
 	}
 
 	@HystrixCommand(fallbackMethod = "fallbackMethodForPutUpdate", commandProperties = {
 			@HystrixProperty(name = "circuitBreaker.errorThresholdPercentage", value = "10"),
 			@HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds", value = "50000"),
-			@HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1")
+			@HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "3000")
 
 	})
 	@PutMapping(path = "patients/{id}")
 	public ResponseEntity<?> updatePatientOne(@PathVariable("id") int id, @RequestBody Patient patient1) {
-
 		patient1.setPatientId(id);
-		Patient patient = ptService.updatePatient(patient1);
+		Patient patient = ptService.updatePatient(id, patient1);
 		if (patient == null) {
 			throw new PatientRegisterException("Unable to register new patient");
 		}
@@ -61,12 +114,9 @@ public class PatientController {
 		login.setUserName(patient1.getEmail());
 		login.setUserRole(UserRole.ROLE_PATIENT);
 		login.setUserId(patient1.getPatientId());
-		try {
-			template.put("http://user-service/users/" + patient1.getEmail(), login);
-		} catch (RestClientException e) {
-			throw new PatientRegisterException("Unable to update patient in authentication server");
-		}
-
+		template.put("http://user-service/users/" + patient1.getEmail(), login);
+		Link link = linkTo(methodOn(PatientController.class).updatePatientOne(id, patient1)).withSelfRel();
+		patient.add(link);
 		MappingJacksonValue patientData = new MappingJacksonValue(patient);
 		patientData.setFilters(Patient.filterOutPassword());
 
@@ -76,14 +126,16 @@ public class PatientController {
 	@HystrixCommand(fallbackMethod = "fallbackMethodForPatchUpdate", commandProperties = {
 			@HystrixProperty(name = "circuitBreaker.errorThresholdPercentage", value = "10"),
 			@HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds", value = "50000"),
-			@HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1")
+			@HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "3000")
 
 	})
 	@PatchMapping(path = "patients/{id}")
-	public ResponseEntity<?> updatePatientTwo(@PathVariable("id") int id, @RequestBody Patient patient1) {
+	public ResponseEntity<?> updatePatientTwo(@PathVariable("id") int id, @RequestBody String data) {
 
+		JSONObject object = new JSONObject(data);
+		Patient patient1 = getPatient(object);
 		patient1.setPatientId(id);
-		Patient patient = ptService.patchUpdatePatient(patient1);
+		Patient patient = ptService.patchUpdatePatient(id, patient1);
 		if (patient == null) {
 			throw new PatientRegisterException("Unable to register new patient");
 		}
@@ -93,16 +145,14 @@ public class PatientController {
 			login.setUserId(id);
 			if (patient1.getPassword() != null)
 				login.setUserPassword(patient1.getPassword());
-			try {
-				Login loginResponse = template.patchForObject("http://user-service/users/" + patient1.getEmail(), login,
-						Login.class);
-				if (loginResponse == null) {
-					throw new PatientRegisterException("Unable to update patient in authentication server");
-				}
-			} catch (RestClientException e) {
+			Login loginResponse = template.patchForObject("http://user-service/users/" + patient1.getEmail(), login,
+					Login.class);
+			if (loginResponse == null) {
 				throw new PatientRegisterException("Unable to update patient in authentication server");
 			}
 		}
+		Link link = linkTo(methodOn(PatientController.class).updatePatientOne(patient.getPatientId(), patient)).withSelfRel();
+		patient.add(link);
 		MappingJacksonValue patientData = new MappingJacksonValue(patient);
 		patientData.setFilters(Patient.filterOutPassword());
 
@@ -112,7 +162,7 @@ public class PatientController {
 	@HystrixCommand(fallbackMethod = "fallbackMethodForAdd", commandProperties = {
 			@HystrixProperty(name = "circuitBreaker.errorThresholdPercentage", value = "10"),
 			@HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds", value = "50000"),
-			@HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1")
+			@HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "3000")
 
 	})
 	@PostMapping(path = "patients")
@@ -131,8 +181,8 @@ public class PatientController {
 		if (loginResponse == null || (loginResponse != null && loginResponse.getStatusCode() != HttpStatus.CREATED)) {
 			throw new PatientRegisterException("Unable to add patient to authentication server");
 		}
-
-		Link link = ControllerLinkBuilder.linkTo(PatientRepository.class).slash(patient.getPatientId()).withSelfRel();
+		Link link = linkTo(methodOn(PatientController.class).updatePatientOne(patient.getPatientId(), patient)).withSelfRel();
+		patient.add(link);
 
 		MappingJacksonValue patientData = new MappingJacksonValue(patient);
 		patientData.setFilters(Patient.filterOutPassword());
@@ -140,20 +190,38 @@ public class PatientController {
 		return ResponseEntity.ok().body(patientData);
 	}
 
+	@PostMapping(path = "patients/{id}/addresses")
+	public ResponseEntity<?> addPatientAddress(@PathVariable("id") int id, @RequestBody Address address) {
+		Patient patient = new Patient();
+		patient.setPatientId(id);
+		patient.getAddresses().add(address);
+		ptService.patchUpdatePatient(id, patient);
+		Link selfLink = linkTo(methodOn(AddressController.class).findAddress(id)).withSelfRel();
+		address.add(selfLink);
+		return ResponseEntity.ok().body(address);
+	}
+
 	@HystrixCommand(fallbackMethod = "fallbackMethodForDelete", commandProperties = {
 			@HystrixProperty(name = "circuitBreaker.errorThresholdPercentage", value = "10"),
 			@HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds", value = "50000"),
-			@HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1")
+			@HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "3000")
 
 	})
 	@DeleteMapping(path = "patients/{id}")
+	@ResponseStatus(code = HttpStatus.NO_CONTENT, reason = "Patient deleted successfully!")
 	public ResponseEntity<?> deletePatient(@PathVariable("id") int id) {
-		Patient patient = new Patient();
-		patient.setPatientId(id);
-		ptService.deletePatient(patient);
-		template.delete("http://user-service/users/"+patient.getEmail());
-		return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+
+		Patient patient = ptService.findById(id);
+		if (patient != null) {
+			ptService.deletePatient(id, patient);
+			template.delete("http://user-service/users/" + patient.getEmail());
+			return ResponseEntity.noContent().build();
+		} else {
+			return ResponseEntity.notFound().build();
+		}
 	}
+
+//	================================= FALL BACK METHODS ===================================================
 
 	@ResponseStatus(code = HttpStatus.SERVICE_UNAVAILABLE, reason = "Currently unable to access authentication server")
 	public ResponseEntity<?> fallbackMethodForAdd(Patient patient) {
@@ -163,40 +231,55 @@ public class PatientController {
 			patientData.setFilters(Patient.filterOutPassword());
 			return ResponseEntity.ok().body(patientData);
 		} else {
-			return ResponseEntity.noContent().build();
+			return ResponseEntity.notFound().build();
 		}
 	}
 
 	@ResponseStatus(code = HttpStatus.SERVICE_UNAVAILABLE, reason = "Currently unable to access authentication server")
 	public ResponseEntity<?> fallbackMethodForPutUpdate(int id, Patient patient) {
 		patient.setPatientId(id);
-		patient = ptService.updatePatient(patient);
+		patient = ptService.updatePatient(id, patient);
 		if (patient != null) {
 			return ResponseEntity.ok().body(patient);
 		} else {
-			return ResponseEntity.noContent().build();
+			return ResponseEntity.notFound().build();
 		}
 	}
 
 	@ResponseStatus(code = HttpStatus.SERVICE_UNAVAILABLE, reason = "Currently unable to access authentication server")
 	public ResponseEntity<?> fallbackMethodForPatchUpdate(int id, Patient patient) {
 		patient.setPatientId(id);
-		patient = ptService.patchUpdatePatient(patient);
+		patient = ptService.patchUpdatePatient(id, patient);
 		if (patient != null) {
 			return ResponseEntity.ok().body(patient);
 		} else {
-			return ResponseEntity.noContent().build();
+			return ResponseEntity.notFound().build();
 		}
 	}
-
 
 	@ResponseStatus(code = HttpStatus.SERVICE_UNAVAILABLE, reason = "Currently unable to access authentication server")
 	public ResponseEntity<?> fallbackMethodForDelete(int id) {
 		Patient patient = new Patient();
 		patient.setPatientId(id);
-		ptService.deletePatient(patient);
+		ptService.deletePatient(id, patient);
 		return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
 	}
 
-	
+//	================================= JSON MAPPER METHODS ===================================================
+
+	private Patient getPatient(JSONObject object) {
+		Gson gson = new Gson();
+		Patient patient = new Patient();
+		patient.setEmail("");
+		patient.setFirstName(object.getString("firstName") == null ? "" : object.getString("firstName"));
+		patient.setLastName(object.getString("lastName") == null ? "" : object.getString("lastName"));
+		patient.setMobileNumber(
+				object.getNumber("mobileNumber") == null ? -1 : (long) object.getNumber("mobileNumber"));
+		patient.setPassword(object.getString("password") == null ? "" : object.getString("password"));
+		patient.setDob(object.getJSONObject("dob") == null ? null
+				: gson.fromJson(object.getJSONObject("dob").toString(), LocalDate.class));
+		patient.setGender(object.getString("gender") == null ? null : Gender.valueOf(object.getString("gender")));
+		return patient;
+	}
+
 }

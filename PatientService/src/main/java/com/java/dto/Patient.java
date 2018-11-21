@@ -1,7 +1,8 @@
 package com.java.dto;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -14,6 +15,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.Transient;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Past;
 
 import org.hibernate.annotations.DynamicUpdate;
@@ -50,7 +52,7 @@ public class Patient extends ResourceSupport implements Serializable {
 	int patientId;
 
 	@Email
-	@NotBlank
+	@NotNull
 	private String email;
 	@Transient
 	private String password;
@@ -61,24 +63,26 @@ public class Patient extends ResourceSupport implements Serializable {
 	@Builder.Default
 	private long mobileNumber = -1;
 	@Past
-	private LocalDateTime dob;
+	private LocalDate dob;
 	@Enumerated(EnumType.STRING)
 	private Gender gender;
 	@Builder.Default
 	private boolean enabled = true;
 	@ManyToMany(cascade = CascadeType.PERSIST)
-	List<Address> addresses;
+	@Builder.Default
+	List<Address> addresses = new ArrayList<>();
 
 //	================================= FILTER DEFINITIONS ===================================================
 
 	public static SimpleFilterProvider filterOutPassword() {
 		SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("email", "firstName", "lastName",
-				"mobileNumber", "dob", "gender");
+				"mobileNumber", "dob", "gender", "links", "enabled");
 		return new SimpleFilterProvider().addFilter("filterName", filter);
 	}
 
 	public static SimpleFilterProvider filterOutExtras() {
-		SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("email", "firstName", "lastName");
+		SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("email", "firstName", "lastName",
+				"links", "enabled");
 		return new SimpleFilterProvider().addFilter("filterName", filter);
 	}
 

@@ -1,8 +1,6 @@
 package com.java.dto;
 
 import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,25 +9,34 @@ import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 
+import org.hibernate.annotations.DynamicUpdate;
+
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Data
 @Entity
+@DynamicUpdate
 public class Schedule {
 
 	@Embedded
+	@Builder.Default
 	private AvailableTime defaultAvailableTimes = new AvailableTime();
 	@ElementCollection(fetch = FetchType.EAGER)
+	@Builder.Default
 	private Map<DayOfWeek, AvailableTime> weekSchedule = new HashMap<>();
-	private boolean saturdayAvailable;
-	private boolean sundayAvailable;
+	@Builder.Default
+	private boolean saturdayAvailable = false;
+	@Builder.Default
+	private boolean sundayAvailable = false;
 
 	public Schedule initializeWeekSchedule() {
-		for (int i = 2; i <= 6; ++i) {
+		for (int i = 1; i < 6; ++i) {
 			weekSchedule.put(DayOfWeek.of(i), defaultAvailableTimes);
 		}
 		if (saturdayAvailable) {
@@ -51,27 +58,6 @@ public class Schedule {
 
 	public void setAvailbleDay(int day) {
 		weekSchedule.put(DayOfWeek.of(day), defaultAvailableTimes);
-	}
-
-	/*
-	 * @TODO
-	 */
-	public void clearDays(LocalDate start, LocalDate end) {
-
-	}
-
-	/*
-	 * @TODO
-	 */
-	public void bookTime(LocalTime apptTime) {
-
-	}
-
-	/*
-	 * @TODO
-	 */
-	public void clearTime(LocalTime apptTime) {
-
 	}
 
 }

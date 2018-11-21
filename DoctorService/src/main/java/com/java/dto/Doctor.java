@@ -1,6 +1,8 @@
 package com.java.dto;
 
+import java.io.Serializable;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -16,7 +18,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 import javax.validation.constraints.Email;
-import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Past;
 
 import org.hibernate.annotations.DynamicUpdate;
@@ -42,15 +44,21 @@ import lombok.NoArgsConstructor;
 @SQLDelete(sql = "update Doctor set enabled=false where doctorId= ?")
 @JsonFilter("filterName")
 @Entity
-public class Doctor extends ResourceSupport {
+public class Doctor extends ResourceSupport implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -6455355432258831892L;
+
 	@Id
 	@GeneratedValue
 	private int doctorId;
-	@NotEmpty
+	@NotNull
 	private String firstName;
-	@NotEmpty
+	@NotNull
 	private String lastName;
 	@Email
+	@NotNull
 	private String email;
 	@Transient
 	private String password;
@@ -62,9 +70,10 @@ public class Doctor extends ResourceSupport {
 	private Gender gender;
 	@ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.PERSIST)
 	@Builder.Default
-	private Set<Speciality> specialties = new HashSet<>();
+	private Set<Specialty> specialties = new HashSet<>();
 	@ManyToMany(cascade = CascadeType.PERSIST)
-	List<Address> addresses;
+	@Builder.Default
+	List<Address> addresses = new ArrayList<>();
 	@Builder.Default
 	private boolean enabled = true;
 	@OneToOne(cascade = CascadeType.PERSIST)
@@ -74,12 +83,13 @@ public class Doctor extends ResourceSupport {
 
 	public static SimpleFilterProvider filterOutPassword() {
 		SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("email", "firstName", "lastName",
-				"mobileNumber", "dob", "gender");
+				"mobileNumber", "dob", "gender", "links", "enabled");
 		return new SimpleFilterProvider().addFilter("filterName", filter);
 	}
 
 	public static SimpleFilterProvider filterOutExtras() {
-		SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("email", "firstName", "lastName");
+		SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("email", "firstName", "lastName",
+				"links", "enabled");
 		return new SimpleFilterProvider().addFilter("filterName", filter);
 	}
 

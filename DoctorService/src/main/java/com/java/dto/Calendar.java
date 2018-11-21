@@ -3,9 +3,12 @@ package com.java.dto;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import javax.persistence.OneToOne;
 
 import org.hibernate.annotations.DynamicUpdate;
@@ -24,9 +27,11 @@ import lombok.NoArgsConstructor;
 @Entity
 public class Calendar extends ResourceSupport {
 
-	private int apptDurationMinutes = 15;
+	@Id
+	@GeneratedValue
+	private int calendarId;
 
-	@OneToOne
+	@OneToOne(cascade = CascadeType.ALL)
 	private Schedule schedule = new Schedule().initializeWeekSchedule();
 
 	@ElementCollection(fetch = FetchType.EAGER)
