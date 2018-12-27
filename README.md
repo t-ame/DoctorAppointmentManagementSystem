@@ -39,19 +39,19 @@ This application is implemented using micro services and angularCLI and has the 
 - `AWS RDS` is used for the sql database
 
 
-## Repository links -- `TODO`
-- Eureka service: 
-- Config service: 
-- Config server: 
+## Services
+- [Eureka service](https://github.com/tamechi/DoctorAppointmentManagementSystem/tree/master/EurekaService) 
+- [Config service](#) 
+- [Config server](#) 
 - [ApiGateway service](https://github.com/tamechi/DoctorAppointmentManagementSystem/tree/master/ApiGatewayService)  
-- User service: 
-- Admin service: 
-- Doctor service: 
-- Patient service:
-- Appointment service:
-- Notification service: 
-- Leave service: 
-- Angular code: 
+- [User service](#) 
+- [Admin service](#)
+- [Doctor service](#) 
+- [Patient service](#)
+- [Appointment service](#)
+- [Notification service](#) 
+- [Leave service](#)
+- [Angular code](#)
 
 
 ## Usage
