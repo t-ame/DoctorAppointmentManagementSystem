@@ -1,5 +1,5 @@
 # Health Care Management Application -- `incomplete`
-Base repository containing links the micro services and links to other support repositories and angular application that make up this application as a whole.
+Base repository containing the micro services and links to other support repositories and angular application that make up this application as a whole.
 
 ## Outline:
 * [Description](#description)
@@ -56,7 +56,7 @@ This application is implemented using micro services and angularCLI and has the 
 
 ## Usage
 Steps must be followed chronologically as some services depend on the others
-- Fork the repositories using the links provided in the [links](#repository-links) section of this document (you do not need to clone the Config server repository as this just holds the configuration files for the micro services), and clone them into your computer.
+- Fork this repository and support repositories using the links provided in the [links](#services) section of this document, and clone them into your computer (you do not need to clone the Config server repository as this just holds the configuration files for the micro services).
 - open the `bootstrap.yml` file in the config service and change the spring.cloud.config.server.git.url to the url of your forked copy of the config server.
 ```
 spring:
