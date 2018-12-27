@@ -43,7 +43,7 @@ This application is implemented using micro services and angularCLI and has the 
 - Eureka service: 
 - Config service: 
 - Config server: 
-- [ApiGateway service](../tree/master/ApiGatewayService)  
+- [ApiGateway service](https://github.com/tamechi/DoctorAppointmentManagementSystem/tree/master/ApiGatewayService)  
 - User service: 
 - Admin service: 
 - Doctor service: 
