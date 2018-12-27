@@ -4,7 +4,7 @@ Base repository containing links to the different repositories for the micro ser
 ## Outline:
 * [Description](#description)
 * [Features](#features)
-* [Repository Links](#repository-links)
+* [Services](#services)
 * [Usage](#usage)
 
 
