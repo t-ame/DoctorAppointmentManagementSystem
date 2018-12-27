@@ -1,4 +1,4 @@
-# Health Care Management Application
+# Health Care Management Application -- `INCOMPLETE`
 Base repository containing links to the different repositories for the micro services and angular application that make up this application.
 
 ## Outline:
