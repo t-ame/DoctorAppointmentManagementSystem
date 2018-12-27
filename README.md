@@ -42,7 +42,7 @@ This application is implemented using micro services and angularCLI and has the 
 ## Services
 - [Eureka service](https://github.com/tamechi/DoctorAppointmentManagementSystem/tree/master/EurekaService) 
 - [Config service](https://github.com/tamechi/DoctorAppointmentManagementSystem/tree/master/ConfigService) 
-- [Config server](#) - `Configuration server`
+- [Config server](https://github.com/tamechi/DoctorBookingApplicationConfigServer.git) - `Configuration server`
 - [ApiGateway service](https://github.com/tamechi/DoctorAppointmentManagementSystem/tree/master/ApiGatewayService)  
 - [User service](https://github.com/tamechi/DoctorAppointmentManagementSystem/tree/master/UserService) 
 - [Admin service](https://github.com/tamechi/DoctorAppointmentManagementSystem/tree/master/AdminService)
