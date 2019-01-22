@@ -6,17 +6,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jms.annotation.EnableJms;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.support.converter.MappingJackson2MessageConverter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.web.client.RestTemplate;
 
 import brave.sampler.Sampler;
 
 @SpringBootApplication
 @EnableJms
+@EnableCaching
 @EnableJpaRepositories(basePackages = "com.java.dao")
 @EnableTransactionManagement(proxyTargetClass = false)
 @EntityScan(basePackages = "com.java.dto")
@@ -39,6 +43,12 @@ public class AppointmentStarter {
 	@Bean
 	Sampler getSampler() {
 		return Sampler.ALWAYS_SAMPLE;
+	}
+
+	@LoadBalanced
+	@Bean
+	RestTemplate getTemplate() {
+		return new RestTemplate();
 	}
 
 }

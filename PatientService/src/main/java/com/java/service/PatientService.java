@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,16 +25,16 @@ public class PatientService {
 	@SuppressWarnings("unused")
 	private static final String PATIENT_LIST_KEY = "patient_list";
 
-	@SuppressWarnings("unused")
-	private static final String PATIENT_ADDRESS_LIST_KEY = "address_list";
-	
-
-	@CachePut(value="patientsCache",key="#id")
+	@Caching(evict = { @CacheEvict(value = "patientsCache", allEntries = true),
+			@CacheEvict(value = "addressCache", key = "#id", condition = "#id>0") }, put = {
+					@CachePut(value = "patientCache", key = "#id", unless = "#result==null || #id<=0") })
 	public Patient updatePatient(int id, Patient patient) {
 		return rep.save(patient);
 	}
 
-	@CachePut(value="patientsCache",key="#id")
+	@Caching(evict = { @CacheEvict(value = "patientsCache", allEntries = true),
+			@CacheEvict(value = "addressCache", key = "#id", condition = "#id>0") }, put = {
+					@CachePut(value = "patientCache", key = "#id", unless = "#result==null || #id<=0") })
 	public Patient patchUpdatePatient(int id, Patient patient) {
 		Optional<Patient> p = rep.findById(patient.getPatientId());
 		Patient newPatient = p.get();
@@ -67,11 +68,15 @@ public class PatientService {
 		return newPatient;
 	}
 
+	@Caching(evict = { @CacheEvict(value = "patientsCache", allEntries = true) }, put = {
+			@CachePut(value = "patientCache", key = "#result.patientId", unless = "#result==null") })
 	public Patient addPatient(Patient patient) {
 		return rep.save(patient);
 	}
 
-	@CacheEvict(value="patientsCache",key="#id")
+	@Caching(evict = { @CacheEvict(condition = "#id>0", value = "patientsCache", allEntries = true),
+			@CacheEvict(value = "patientCache", allEntries = true),
+			@CacheEvict(value = "addressCache", key = "#id", condition = "#id>0") })
 	public void deletePatient(int id, Patient patient) {
 		rep.delete(patient);
 	}

@@ -1,17 +1,23 @@
 package com.java.service;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.java.dao.CalendarRepository;
 import com.java.dao.DoctorRepository;
+import com.java.dto.Address;
 import com.java.dto.AvailableTime;
 import com.java.dto.Booking;
 import com.java.dto.Calendar;
 import com.java.dto.Doctor;
+import com.java.dto.Patient;
 import com.java.dto.Schedule;
 
 @Service
@@ -24,11 +30,11 @@ public class DoctorService {
 	@Autowired
 	CalendarRepository calRep;
 
-	public Doctor updatePatient(Doctor doctor) {
+	public Doctor updateDoctor(Doctor doctor) {
 		return rep.save(doctor);
 	}
 
-	public Doctor patchUpdatePatient(Doctor doctor) {
+	public Doctor patchUpdateDoctor(Doctor doctor) {
 
 		Optional<Doctor> d = rep.findById(doctor.getDoctorId());
 		Doctor newDoctor = d.get();
@@ -97,12 +103,25 @@ public class DoctorService {
 		return null;
 	}
 
-	public Doctor addPatient(Doctor doctor) {
-		return rep.save(doctor);
+	public void deletePatient(int id, Patient patient) {
+		rep.delete(patient);
 	}
 
-	public void deletePatient(Doctor doctor) {
-		rep.delete(doctor);
+	public Page<Doctor> findAllActive(int page, int size) {
+		return rep.findByEnabledIs(true, PageRequest.of(page, size, new Sort(Sort.Direction.ASC, "lastName")));
+	}
+
+	public Page<Doctor> findAllDeleted(int page, int size) {
+		return rep.findByEnabledIs(false, PageRequest.of(page, size, new Sort(Sort.Direction.ASC, "lastName")));
+	}
+
+	public Doctor findById(int id) {
+		Optional<Doctor> p = rep.findById(id);
+		return p.get();
+	}
+
+	public List<Address> findAddresses(int id) {
+		return rep.findDoctorAddresses(id);
 	}
 
 }

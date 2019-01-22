@@ -148,20 +148,49 @@ public class AppointmentController {
 
 	@ResponseStatus(code = HttpStatus.SERVICE_UNAVAILABLE, reason = "Currently unable to access authentication server")
 	public ResponseEntity<?> fallbackMethodForAddAppt(Appointment appointment) {
-
-		return null;
+		appointment = apptService.addAppointment2(appointment);
+		if (appointment != null) {
+			Link link = linkTo(methodOn(AppointmentController.class).deleteAppointment(appointment.getAppointmentId()))
+					.withSelfRel();
+			Link link2 = linkTo(methodOn(AppointmentController.class).addNewAppointment(appointment))
+					.withRel("addresses");
+			appointment.add(link);
+			appointment.add(link2);
+			return ResponseEntity.ok(appointment);
+		}
+		return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).body("Overlap with existing appointment");
 	}
 
 	@ResponseStatus(code = HttpStatus.SERVICE_UNAVAILABLE, reason = "Currently unable to access authentication server")
-	public ResponseEntity<?> fallbackMethodForUpdateAppt(Appointment appointment) {
+	public ResponseEntity<?> fallbackMethodForUpdateAppt(int id, Booking booking) {
+		Appointment appointment = Appointment.appointment().appointmentId(id)
+				.appointmentStartTime(LocalDateTime.of(booking.getBookingStartDate(), booking.getBookingEndTime()))
+				.appointmentStartTime(LocalDateTime.of(booking.getBookingEndDate(), booking.getBookingEndTime()))
+				.build();
+		appointment = apptService.updateAppointment2(appointment);
+		if (appointment != null) {
+			booking.setAppointmentId(id);
+			Link link = linkTo(methodOn(AppointmentController.class).deleteAppointment(appointment.getAppointmentId()))
+					.withSelfRel();
+			Link link2 = linkTo(methodOn(AppointmentController.class).addNewAppointment(appointment))
+					.withRel("addresses");
+			appointment.add(link);
+			appointment.add(link2);
+			return ResponseEntity.ok(appointment);
+		}
 
-		return null;
+		return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED)
+				.body("Invalid appointment Id or Overlap with existing appointment");
 	}
 
 	@ResponseStatus(code = HttpStatus.SERVICE_UNAVAILABLE, reason = "Currently unable to access authentication server")
-	public ResponseEntity<?> fallbackMethodForDeleteAppt(Appointment appointment) {
-
-		return null;
+	public ResponseEntity<?> fallbackMethodForDeleteAppt(int id) {
+		Appointment appointment = apptService.findAppointmentById(id);
+		if (appointment != null) {
+			apptService.cancelAppointment(appointment);
+			return ResponseEntity.noContent().build();
+		}
+		return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).body("Invalid appointment id");
 	}
 
 }

@@ -4,6 +4,10 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -29,6 +33,7 @@ public class AppointmentService {
 	 * 
 	 * @author Toya Amechi
 	 */
+	@Cacheable(value = "appointmentCache", key = "#id", unless = "#result==null")
 	public Appointment findAppointmentById(int id) {
 		Optional<Appointment> optional = rep.findById(id);
 		return optional.get();
@@ -44,11 +49,29 @@ public class AppointmentService {
 	 * 
 	 * @author Toya Amechi
 	 */
+
+	@Caching(evict = { @CacheEvict(condition="#result!=null", value = "appointmentsCache", allEntries = true) }, put = {
+			@CachePut(value = "appointmentCache", key = "#result.appointmentId", unless = "#result==null") })
 	public Appointment addAppointment(Appointment appt) {
 		if (rep.findByTimeOverlap(appt.getAppointmentStartTime(), appt.getAppointmentEndTime()).size() > 0) {
 			return null;
 		}
 		return rep.save(appt);
+	}
+
+	/**
+	 * Fallback for adding a new {@link Appointment} to the database.
+	 *
+	 * @param appt new {@link Appointment} to be added. Must not be {@literal null}.
+	 * @return {@literal null} if there is an overlap and otherwise, the saved
+	 *         {@link Appointment}.
+	 * 
+	 * @author Toya Amechi
+	 */
+
+	@Cacheable(value = "appointmentCache", key = "#appt.appointmentId", unless = "#result==null")
+	public Appointment addAppointment2(Appointment appt) {
+		return addAppointment(appt);
 	}
 
 	/**
@@ -60,6 +83,9 @@ public class AppointmentService {
 	 * 
 	 * @author Toya Amechi
 	 */
+
+	@Caching(evict = { @CacheEvict(value = "appointmentCache", key = "#appt.appointmentId"),
+			@CacheEvict(condition="#appt.appointmentId>0", value = "appointmentsCache", allEntries = true) })
 	public void cancelAppointment(Appointment appt) {
 		rep.delete(appt);
 	}
@@ -74,6 +100,9 @@ public class AppointmentService {
 	 * 
 	 * @author Toya Amechi
 	 */
+
+	@Caching(evict = { @CacheEvict(condition="#result!=null", value = "appointmentsCache", allEntries = true) }, put = {
+			@CachePut(value = "appointmentCache", key = "#result.appointmentId", unless = "#result==null") })
 	public Appointment updateAppointment(Appointment appt) {
 		if (appt.getAppointmentId() <= 0)
 			return null;
@@ -90,6 +119,23 @@ public class AppointmentService {
 		}
 
 		return addAppointment(oldAppt);
+	}
+	
+
+	/**
+	 * Fallback method for updating the start and end time of an existing {@link Appointment}.
+	 *
+	 * @param appt new {@link Appointment} to be updated. Must not be
+	 *             {@literal null}.
+	 * @return {@literal null} if the appointment Id is not valid or if there is an
+	 *         overlap with the new time, else the updated {@link Appointment}.
+	 * 
+	 * @author Toya Amechi
+	 */
+
+	@Cacheable(value = "appointmentCache", key = "#appt.appointmentId", unless = "#result==null")
+	public Appointment updateAppointment2(Appointment appt) {
+		return updateAppointment(appt);
 	}
 
 	/**
@@ -122,6 +168,7 @@ public class AppointmentService {
 	 * 
 	 * @author Toya Amechi
 	 */
+	@Cacheable(value = "appointmentsCache", unless = "#result==null")
 	public Page<Appointment> findPatientBooked(String patientEmailId, int page, int size) {
 		return rep.findByPatientEmailIdAndStatus(patientEmailId, AppointmentStatus.BOOKED,
 				PageRequest.of(page, size, new Sort(Sort.Direction.ASC, "appointmentStartTime")));
@@ -146,12 +193,13 @@ public class AppointmentService {
 	/**
 	 * Fetches a {@link Page} of all booked appointments.
 	 *
-	 * @param page           zero-based page index.
-	 * @param size           the size of the page to be returned.
+	 * @param page zero-based page index.
+	 * @param size the size of the page to be returned.
 	 * @return {@link Page} of appointments.
 	 * 
 	 * @author Toya Amechi
 	 */
+	@Cacheable(value = "appointmentsCache", unless = "#result==null")
 	public Page<Appointment> findAllBooked(int page, int size) {
 		return rep.findByStatusIs(AppointmentStatus.BOOKED,
 				PageRequest.of(page, size, new Sort(Sort.Direction.ASC, "appointmentStartTime")));

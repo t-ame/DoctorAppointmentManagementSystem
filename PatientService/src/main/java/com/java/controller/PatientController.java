@@ -27,7 +27,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.client.RestTemplate;
 
 import com.google.gson.Gson;
-import com.java.dto.Address;
 import com.java.dto.Gender;
 import com.java.dto.Login;
 import com.java.dto.Patient;
@@ -57,42 +56,14 @@ public class PatientController {
 		}
 		List<MappingJacksonValue> list = patients.stream().map(x -> {
 			x.add(linkTo(methodOn(PatientController.class).updatePatientOne(x.getPatientId(), x)).withSelfRel());
+			x.add(linkTo(methodOn(PatientController.class).addPatientAddress(x.getPatientId())).withRel("addresses"));
 			MappingJacksonValue patientData = new MappingJacksonValue(x);
 			patientData.setFilters(Patient.filterOutPassword());
 			return patientData;
 		}).collect(Collectors.toList());
 
-		Link link = linkTo(methodOn(PatientController.class).findAllActivePatients()).withRel("addresses");
+		Link link = linkTo(methodOn(PatientController.class).findAllActivePatients()).withRel("patients");
 		Resources<MappingJacksonValue> result = new Resources<MappingJacksonValue>(list, link);
-		return result;
-	}
-
-	@GetMapping(path = "patients/{id}")
-	public ResponseEntity<?> findPatient(@PathVariable("id") int id) {
-		Patient patient = ptService.findById(id);
-		if (patient == null) {
-			return ResponseEntity.notFound().build();
-		}
-		Link selfLink = linkTo(methodOn(PatientController.class).updatePatientOne(patient.getPatientId(), patient))
-				.withSelfRel();
-		patient.add(selfLink);
-		Link link = linkTo(methodOn(PatientController.class).findPatientAddresses(id)).withRel("addresses");
-		patient.add(link);
-
-		return ResponseEntity.ok(patient);
-	}
-
-	@GetMapping(path = "patients/{id}/addresses")
-	public Resources<Address> findPatientAddresses(@PathVariable("id") int id) {
-		List<Address> addresses = ptService.findAddresses(id);
-		for (Address address : addresses) {
-			Link selfLink = linkTo(methodOn(AddressController.class).findAddress(address.getAddressId()))
-					.withRel("address");
-			address.add(selfLink);
-		}
-		Link link = linkTo(methodOn(PatientController.class).findPatientAddresses(id)).withRel("addresses");
-		Resources<Address> result = new Resources<Address>(addresses, link);
-
 		return result;
 	}
 
@@ -151,7 +122,8 @@ public class PatientController {
 				throw new PatientRegisterException("Unable to update patient in authentication server");
 			}
 		}
-		Link link = linkTo(methodOn(PatientController.class).updatePatientOne(patient.getPatientId(), patient)).withSelfRel();
+		Link link = linkTo(methodOn(PatientController.class).updatePatientOne(patient.getPatientId(), patient))
+				.withSelfRel();
 		patient.add(link);
 		MappingJacksonValue patientData = new MappingJacksonValue(patient);
 		patientData.setFilters(Patient.filterOutPassword());
@@ -181,7 +153,8 @@ public class PatientController {
 		if (loginResponse == null || (loginResponse != null && loginResponse.getStatusCode() != HttpStatus.CREATED)) {
 			throw new PatientRegisterException("Unable to add patient to authentication server");
 		}
-		Link link = linkTo(methodOn(PatientController.class).updatePatientOne(patient.getPatientId(), patient)).withSelfRel();
+		Link link = linkTo(methodOn(PatientController.class).updatePatientOne(patient.getPatientId(), patient))
+				.withSelfRel();
 		patient.add(link);
 
 		MappingJacksonValue patientData = new MappingJacksonValue(patient);
@@ -190,15 +163,9 @@ public class PatientController {
 		return ResponseEntity.ok().body(patientData);
 	}
 
-	@PostMapping(path = "patients/{id}/addresses")
-	public ResponseEntity<?> addPatientAddress(@PathVariable("id") int id, @RequestBody Address address) {
-		Patient patient = new Patient();
-		patient.setPatientId(id);
-		patient.getAddresses().add(address);
-		ptService.patchUpdatePatient(id, patient);
-		Link selfLink = linkTo(methodOn(AddressController.class).findAddress(id)).withSelfRel();
-		address.add(selfLink);
-		return ResponseEntity.ok().body(address);
+	@PatchMapping(path = "patients/{id}/addresses")
+	public ResponseEntity<?> addPatientAddress(@PathVariable("id") int id) {
+		return ResponseEntity.badRequest().build();
 	}
 
 	@HystrixCommand(fallbackMethod = "fallbackMethodForDelete", commandProperties = {

@@ -18,10 +18,10 @@ public interface PatientRepository extends JpaRepository<Patient, Integer> {
 	@RestResource(exported = false)
 	Patient findByEmail(String email);
 
-	@RestResource(exported = false)
+	@RestResource(exported = true)
 	List<Patient> findByEnabledIs(boolean active);
 
-	@RestResource(exported = false)
+	@RestResource(path = "find-deleted", exported = false)
 	@Query("select addresses from Patient where patientId = ?1")
 	List<Address> findPatientAddresses(int patientId);
 

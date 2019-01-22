@@ -22,7 +22,6 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 public class Appointment extends ResourceSupport implements Serializable {
 
-
 	/**
 	 * 
 	 */

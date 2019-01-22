@@ -77,7 +77,8 @@ public class Doctor extends ResourceSupport implements Serializable {
 	@Builder.Default
 	private boolean enabled = true;
 	@OneToOne(cascade = CascadeType.PERSIST)
-	private Calendar calendar;
+	@Builder.Default
+	private Calendar calendar = new Calendar();
 
 //	================================= FILTER DEFINITIONS ===================================================
 
